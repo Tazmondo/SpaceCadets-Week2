@@ -1,6 +1,7 @@
 --!strict
 local process = require("@lune/process")
 local fs = require("@lune/fs")
+local regex = require("@lune/regex")
 
 local programFile = process.args[1]
 
@@ -16,37 +17,44 @@ end
 
 local program = fs.readFile(programFile)
 
-local variables = {}
+local runContext = {
+	variables = {},
+	nextStatement = 1,
+}
 
 local statements = program:gsub("\r\n", "\n"):gsub("\n", ""):split(";")
 -- statements[#statements] = nil
 
-for lineNumber, line in statements do
-	local words = line:split(" ")
+local function trim(str: string)
+	local re = regex.new("^\\s+|\\s+$")
+	return re:replaceAll(str, "")
+end
+
+while statements[runContext.nextStatement] do
+	local lineNumber = runContext.nextStatement
+	local line = statements[runContext.nextStatement]
+
+	runContext.nextStatement += 1
+
+	local words = trim(line):split(" ")
 
 	print(`Executing: {lineNumber}: {line}`)
 
 	if words[1] == "clear" then
 		local variable = words[2]
-		variables[variable] = 0
+		runContext.variables[variable] = 0
 	elseif words[1] == "incr" then
 		local variable = words[2]
-		if not variables[variable] then
-			error(`Line: {lineNumber}: Variable {variable} did not exist!`)
-		end
-		variables[variable] += 1
+		runContext.variables[variable] = (runContext.variables[variable] or 0) + 1
 	elseif words[1] == "decr" then
 		local variable = words[2]
-		if not variables[variable] then
-			error(`Line: {lineNumber}: Variable {variable} did not exist`)
-		end
-		variables[variable] -= 1
+		runContext.variables[variable] = (runContext.variables[variable] or 0) - 1
 	else
 		continue
 	end
 
 	print("Program State:")
-	for variable, value in variables do
+	for variable, value in runContext.variables do
 		print(`{variable}: {value}`)
 	end
 	print("\n")
