@@ -42,12 +42,21 @@ while statements[runContext.nextStatement] do
 
 	if words[1] == "clear" then
 		local variable = words[2]
+		if not variable then
+			error("Must provide a variable to clear")
+		end
 		runContext.variables[variable] = 0
 	elseif words[1] == "incr" then
 		local variable = words[2]
+		if not variable then
+			error("Must provide a variable to incr")
+		end
 		runContext.variables[variable] = (runContext.variables[variable] or 0) + 1
 	elseif words[1] == "decr" then
 		local variable = words[2]
+		if not variable then
+			error("Must provide a variable to decr")
+		end
 		runContext.variables[variable] = (runContext.variables[variable] or 0) - 1
 	else
 		continue
