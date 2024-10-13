@@ -1,7 +1,9 @@
 clear X;
 incr X;
 incr X;
+incr X;
 clear Y;
+incr Y;
 incr Y;
 incr Y;
 incr Y;
