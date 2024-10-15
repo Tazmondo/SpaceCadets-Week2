@@ -26,34 +26,28 @@ type WhileLoop = {
 
 type StackMember = WhileLoop
 
-local runContext = {
-	variables = {},
-	stack = {} :: { StackMember },
-	nextStatement = 1,
+type RunContext = {
+	variables: { [string]: number },
+	stack: { StackMember },
+	nextStatement: number,
 }
-
-local statements = program:split(";")
--- statements[#statements] = nil
 
 local function trim(str: string)
 	local re = regex.new("^\\s+|\\s+$")
 	return re:replaceAll(str, "")
 end
 
-while statements[runContext.nextStatement] do
-	local lineNumber = runContext.nextStatement
-	local line = statements[runContext.nextStatement]
-
+local function runStatement(runContext: RunContext, lineNumber: number, statement: string)
 	runContext.nextStatement += 1
 
 	local topStack = runContext.stack[#runContext.stack]
-	local words = trim(line):split(" ")
+	local words = trim(statement):split(" ")
 
 	if topStack and topStack.type == "While" and topStack.failed and words[1] ~= "end" then
-		continue
+		return
 	end
 
-	print(`Executing: {lineNumber}: {line}`)
+	print(`Executing: {lineNumber}: {statement}`)
 
 	if words[1] == "clear" then
 		local variable = words[2]
@@ -114,12 +108,31 @@ while statements[runContext.nextStatement] do
 		else
 		end
 	else
-		continue
+		return
 	end
-
-	print("Program State:")
-	for variable, value in runContext.variables do
-		print(`{variable}: {value}`)
-	end
-	print("\n")
 end
+
+local function interpretProgram(program: string)
+	local runContext: RunContext = {
+		variables = {},
+		stack = {} :: { StackMember },
+		nextStatement = 1,
+	}
+
+	local statements = program:split(";")
+
+	while statements[runContext.nextStatement] do
+		local lineNumber = runContext.nextStatement
+		local statement = statements[runContext.nextStatement]
+
+		runStatement(runContext, lineNumber, statement)
+
+		print("Program State:")
+		for variable, value in runContext.variables do
+			print(`{variable}: {value}`)
+		end
+		print("\n")
+	end
+end
+
+interpretProgram(program)
